@@ -87,8 +87,10 @@ td.label {
 }
 
 .action-btn {
+  position: sticky;
+  bottom: 20px;
   display: block;
-  margin: 0 auto;
+  margin: 30px auto 20px;
   padding: 12px 32px;
   font-size: 1rem;
   font-weight: 600;
@@ -98,18 +100,19 @@ td.label {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+  z-index: 100;
 }
 
 .action-btn:hover {
   background-color: #0052a3;
-  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 102, 204, 0.5);
   transform: translateY(-2px);
 }
 
 .action-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
 }
 
 @media (max-width: 768px) {
