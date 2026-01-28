@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import dbData from "./data/db.json";
-import { generatePlanning } from "./logic/planningGenerator";
+import { usePlanningRandomizer } from "./hooks/usePlanningRandomizer";
 import { savePlanning, loadPlanning } from "../utils";
 import type { Database, Planificacion, PlanEjercicio } from "./types";
 
 const db = dbData as unknown as Database;
 
 function App() {
-  const [planning, setPlanning] = useState<Planificacion | null>(null);
+  const { planning, setPlanning, generateNewPlanning } =
+    usePlanningRandomizer(db);
+
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -22,10 +24,10 @@ function App() {
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    const newPlan = generatePlanning(db);
+
+    const newPlan = generateNewPlanning();
 
     savePlanning(newPlan);
-    setPlanning(newPlan);
     setIsGenerating(false);
   };
 
