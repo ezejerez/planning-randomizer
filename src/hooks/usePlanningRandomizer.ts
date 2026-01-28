@@ -2,8 +2,33 @@ import { useState, useCallback } from "react";
 import type { Database, Planificacion, PlanEjercicio } from "../types";
 import { getRandomElement } from "../../utils";
 
+export type SlotSelection = {
+  block: "SETUP" | "EC" | "PP1" | "PP2" | "CIERRE";
+  index: number;
+};
+
+// Map blocks to their DB source keys
+const SLOT_KEYS = {
+  EC: ["EC_ZM", "EC_TI", "EC_TS"],
+  PP1: ["PP_TI_1", "PP_ZM_1", "PP_TS_1"],
+  PP2: ["PP_TI_2", "PP_ZM_2", "PP_TS_2"],
+};
+
 export const usePlanningRandomizer = (db: Database) => {
   const [planning, setPlanning] = useState<Planificacion | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<SlotSelection | null>(null);
+
+  const toggleSelection = useCallback(
+    (block: SlotSelection["block"], index: number) => {
+      setSelectedSlot((prev) => {
+        if (prev?.block === block && prev?.index === index) {
+          return null; // deselect if same
+        }
+        return { block, index };
+      });
+    },
+    [],
+  );
 
   const generateNewPlanning = useCallback(() => {
     const newPlanning: Planificacion = {
@@ -29,7 +54,7 @@ export const usePlanningRandomizer = (db: Database) => {
     };
 
     // Entrada en Calor
-    const ecSlots = ["EC_ZM", "EC_TI", "EC_TS"];
+    const ecSlots = SLOT_KEYS.EC;
     const ecCategories = ["ZM", "TI", "TS"];
 
     ecSlots.forEach((slot, idx) => {
@@ -50,7 +75,7 @@ export const usePlanningRandomizer = (db: Database) => {
     });
 
     // Primera Ronda PP
-    const pp1Slots = ["PP_TI_1", "PP_ZM_1", "PP_TS_1"];
+    const pp1Slots = SLOT_KEYS.PP1;
     const ppCategories = ["TI", "ZM", "TS"];
 
     pp1Slots.forEach((slot, idx) => {
@@ -73,7 +98,7 @@ export const usePlanningRandomizer = (db: Database) => {
       );
     });
 
-    const pp2Slots = ["PP_TI_2", "PP_ZM_2", "PP_TS_2"];
+    const pp2Slots = SLOT_KEYS.PP2;
 
     pp2Slots.forEach((slot, idx) => {
       const ejercicioData = getRandomElement(db.SLOTS_DINAMICOS[slot]);
@@ -96,8 +121,129 @@ export const usePlanningRandomizer = (db: Database) => {
     });
 
     setPlanning(newPlanning);
+    setSelectedSlot(null); // Reset selection
     return newPlanning;
   }, [db]);
 
-  return { planning, setPlanning, generateNewPlanning };
+  const regenerateSelectedSlot = useCallback(() => {
+    if (!selectedSlot || !planning) return;
+
+    const { block, index } = selectedSlot;
+    // Deep clone to avoid mutating state directly
+    const newPlanning = JSON.parse(JSON.stringify(planning)) as Planificacion;
+
+    // Helper to get excluded exercises from a list of exercises
+    const getNames = (list: PlanEjercicio[]) => list.map((e) => e.Ejercicio);
+
+    if (block === "SETUP") {
+      const current =
+        planning.Bloques_Clase.Setup_Inicial[
+          "CONEXION_INICIAL+MOVILIDAD_ARTICULAR"
+        ];
+      const pool = db.BLOQUES_FIJOS.SETUP_INICIAL_OPCIONES;
+      // Filter out current
+      const available = pool.filter((item) => item !== current);
+      if (available.length > 0)
+        newPlanning.Bloques_Clase.Setup_Inicial[
+          "CONEXION_INICIAL+MOVILIDAD_ARTICULAR"
+        ] = getRandomElement(available) as string;
+    } else if (block === "CIERRE") {
+      const current =
+        planning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES;
+      const pool = db.BLOQUES_FIJOS.CIERRE_OPCIONES_SUGERIDAS;
+      const available = pool.filter((item) => item !== current);
+      if (available.length > 0)
+        newPlanning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES =
+          getRandomElement(available) as string;
+    } else {
+      // Dynamic slots
+      let currentList: PlanEjercicio[] = [];
+      let dbKeyStr = "";
+      let category = "";
+
+      // Determine context which list to modify and which DB key to check
+      if (block === "EC") {
+        currentList = planning.Bloques_Clase.ENTRADA_EN_CALOR_Minutos_0_a_10;
+        dbKeyStr = SLOT_KEYS.EC[index];
+        category = ["ZM", "TI", "TS"][index];
+      } else if (block === "PP1") {
+        currentList =
+          planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Primera_Ronda;
+        dbKeyStr = SLOT_KEYS.PP1[index];
+        category = ["TI", "ZM", "TS"][index];
+      } else if (block === "PP2") {
+        currentList =
+          planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40
+            .Segunda_Ronda_Minuto_30;
+        dbKeyStr = SLOT_KEYS.PP2[index];
+        category = ["TI", "ZM", "TS"][index];
+      }
+
+      if (dbKeyStr && currentList) {
+        const poolData = db.SLOTS_DINAMICOS[dbKeyStr];
+        // Enforce uniqueness: exclude exercise present in the current visible list
+        const existingNames = getNames(currentList);
+
+        // Find options in pool that are NOT in the existingNames
+        const validOptions = poolData.filter(
+          (ex) => !existingNames.includes(ex.Ejercicio),
+        );
+
+        // Fallback: if all exercises are used (unlikely but possible if pool is small),
+        // at least ensure it's not the *exact same one* at this index.
+        const fallbackOptions = poolData.filter(
+          (ex) => ex.Ejercicio !== currentList[index].Ejercicio,
+        );
+
+        const dataset =
+          validOptions.length > 0 ? validOptions : fallbackOptions;
+
+        if (dataset.length > 0) {
+          const newExerciseData = getRandomElement(dataset) as any;
+          const newOption = getRandomElement(newExerciseData.Opciones) as any;
+
+          const newItem: PlanEjercicio = {
+            Categoria: category,
+            Ejercicio: newExerciseData.Ejercicio,
+            RESORTE: newOption.RESORTE || "",
+            ACCESORIO: newOption.ACCESORIO || "",
+            EO: newOption.EO || "",
+            V: newOption.V || "",
+            TIPO: newOption.TIPO || undefined,
+          };
+
+          // Apply update
+          if (block === "EC") {
+            newPlanning.Bloques_Clase.ENTRADA_EN_CALOR_Minutos_0_a_10[index] =
+              newItem;
+          } else if (block === "PP1") {
+            newPlanning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Primera_Ronda[
+              index
+            ] = newItem;
+          } else if (block === "PP2") {
+            newPlanning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Segunda_Ronda_Minuto_30[
+              index
+            ] = newItem;
+          }
+        }
+      }
+    }
+
+    setPlanning(newPlanning);
+    // Keep selection active? User typically wants to see the change.
+    // Maybe deselect after change to indicate "done".
+    // User said "Al presionar... el boton cambia... genera nueva variante".
+    // Typically after generating, you might want to review it. I'll keep distinct logic:
+    // "Generate" button triggers logic, then selection remains? No, let's keep selection so they can regenerate again if they don't like it.
+    // If they want to select another, they click another.
+  }, [planning, selectedSlot, db]);
+
+  return {
+    planning,
+    setPlanning,
+    generateNewPlanning,
+    selectedSlot,
+    toggleSelection,
+    regenerateSelectedSlot,
+  };
 };

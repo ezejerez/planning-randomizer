@@ -4,13 +4,19 @@ import dbData from "./data/db.json";
 import { usePlanningRandomizer } from "./hooks/usePlanningRandomizer";
 import { savePlanning, loadPlanning } from "../utils";
 import type { Database, Planificacion, PlanEjercicio } from "./types";
+import { PlanRow } from "./components/PlanRow";
 
 const db = dbData as unknown as Database;
 
 function App() {
-  const { planning, setPlanning, generateNewPlanning } =
-    usePlanningRandomizer(db);
-
+  const {
+    planning,
+    setPlanning,
+    generateNewPlanning,
+    selectedSlot,
+    toggleSelection,
+    regenerateSelectedSlot,
+  } = usePlanningRandomizer(db);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -18,17 +24,27 @@ function App() {
     if (savedPlan) {
       setPlanning(savedPlan as Planificacion);
     } else {
-      handleGenerate();
+      generateNewPlanning(); // Initial generation
     }
-  }, []);
+  }, []); // Run once on mount
 
-  const handleGenerate = () => {
-    setIsGenerating(true);
+  // Auto-save whenever planning changes
+  useEffect(() => {
+    if (planning) {
+      savePlanning(planning);
+    }
+  }, [planning]);
 
-    const newPlan = generateNewPlanning();
-
-    savePlanning(newPlan);
-    setIsGenerating(false);
+  const handleMainAction = () => {
+    if (selectedSlot) {
+      regenerateSelectedSlot();
+    } else {
+      setIsGenerating(true);
+      generateNewPlanning();
+      // setTimeout to simulate visual feedback if needed,
+      // but strictly not necessary as state update is instant
+      setTimeout(() => setIsGenerating(false), 300);
+    }
   };
 
   if (!planning)
@@ -52,16 +68,19 @@ function App() {
               </td>
             </tr>
 
-            <tr className="section-setup">
-              <td className="label">Conexión Inicial + Movilidad Articular</td>
-              <td>
-                {
-                  planning.Bloques_Clase.Setup_Inicial[
-                    "CONEXION_INICIAL+MOVILIDAD_ARTICULAR"
-                  ]
-                }
-              </td>
-            </tr>
+            <PlanRow
+              baseClass="section-setup"
+              label="Conexión Inicial + Movilidad Articular"
+              details={
+                planning.Bloques_Clase.Setup_Inicial[
+                  "CONEXION_INICIAL+MOVILIDAD_ARTICULAR"
+                ]
+              }
+              isSelected={
+                selectedSlot?.block === "SETUP" && selectedSlot?.index === 0
+              }
+              onLongPress={() => toggleSelection("SETUP", 0)}
+            />
 
             {/* Entrada en Calor */}
             <tr className="section-ec">
@@ -72,24 +91,30 @@ function App() {
 
             {planning.Bloques_Clase.ENTRADA_EN_CALOR_Minutos_0_a_10.map(
               (ej: PlanEjercicio, i: number) => (
-                <tr key={`ec-${i}`} className="section-ec">
-                  <td className="label">
-                    {ej.Categoria} - {ej.Ejercicio}
-                  </td>
-                  <td>
-                    <strong>Resorte:</strong> {ej.RESORTE}
-                    <br />
-                    {ej.ACCESORIO && (
-                      <>
-                        <strong>Accesorio:</strong> {ej.ACCESORIO}
-                        <br />
-                      </>
-                    )}
-                    <strong>EO:</strong> {ej.EO}
-                    <br />
-                    <strong>V:</strong> {ej.V}
-                  </td>
-                </tr>
+                <PlanRow
+                  key={`ec-${i}`}
+                  baseClass="section-ec"
+                  label={`${ej.Categoria} - ${ej.Ejercicio}`}
+                  details={
+                    <>
+                      <strong>Resorte:</strong> {ej.RESORTE}
+                      <br />
+                      {ej.ACCESORIO && (
+                        <>
+                          <strong>Accesorio:</strong> {ej.ACCESORIO}
+                          <br />
+                        </>
+                      )}
+                      <strong>EO:</strong> {ej.EO}
+                      <br />
+                      <strong>V:</strong> {ej.V}
+                    </>
+                  }
+                  isSelected={
+                    selectedSlot?.block === "EC" && selectedSlot?.index === i
+                  }
+                  onLongPress={() => toggleSelection("EC", i)}
+                />
               ),
             )}
 
@@ -102,30 +127,36 @@ function App() {
 
             {planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Primera_Ronda.map(
               (ej: PlanEjercicio, i: number) => (
-                <tr key={`pp1-${i}`} className="section-pp1">
-                  <td className="label">
-                    {ej.Categoria} - {ej.Ejercicio}
-                  </td>
-                  <td>
-                    {ej.TIPO && (
-                      <>
-                        <strong>Tipo:</strong> {ej.TIPO}
-                        <br />
-                      </>
-                    )}
-                    <strong>Resorte:</strong> {ej.RESORTE}
-                    <br />
-                    {ej.ACCESORIO && (
-                      <>
-                        <strong>Accesorio:</strong> {ej.ACCESORIO}
-                        <br />
-                      </>
-                    )}
-                    <strong>EO:</strong> {ej.EO}
-                    <br />
-                    <strong>V:</strong> {ej.V}
-                  </td>
-                </tr>
+                <PlanRow
+                  key={`pp1-${i}`}
+                  baseClass="section-pp1"
+                  label={`${ej.Categoria} - ${ej.Ejercicio}`}
+                  details={
+                    <>
+                      {ej.TIPO && (
+                        <>
+                          <strong>Tipo:</strong> {ej.TIPO}
+                          <br />
+                        </>
+                      )}
+                      <strong>Resorte:</strong> {ej.RESORTE}
+                      <br />
+                      {ej.ACCESORIO && (
+                        <>
+                          <strong>Accesorio:</strong> {ej.ACCESORIO}
+                          <br />
+                        </>
+                      )}
+                      <strong>EO:</strong> {ej.EO}
+                      <br />
+                      <strong>V:</strong> {ej.V}
+                    </>
+                  }
+                  isSelected={
+                    selectedSlot?.block === "PP1" && selectedSlot?.index === i
+                  }
+                  onLongPress={() => toggleSelection("PP1", i)}
+                />
               ),
             )}
 
@@ -137,30 +168,36 @@ function App() {
             </tr>
             {planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Segunda_Ronda_Minuto_30.map(
               (ej: PlanEjercicio, i: number) => (
-                <tr key={`pp2-${i}`} className="section-pp2">
-                  <td className="label">
-                    {ej.Categoria} - {ej.Ejercicio}
-                  </td>
-                  <td>
-                    {ej.TIPO && (
-                      <>
-                        <strong>Tipo:</strong> {ej.TIPO}
-                        <br />
-                      </>
-                    )}
-                    <strong>Resorte:</strong> {ej.RESORTE}
-                    <br />
-                    {ej.ACCESORIO && (
-                      <>
-                        <strong>Accesorio:</strong> {ej.ACCESORIO}
-                        <br />
-                      </>
-                    )}
-                    <strong>EO:</strong> {ej.EO}
-                    <br />
-                    <strong>V:</strong> {ej.V}
-                  </td>
-                </tr>
+                <PlanRow
+                  key={`pp2-${i}`}
+                  baseClass="section-pp2"
+                  label={`${ej.Categoria} - ${ej.Ejercicio}`}
+                  details={
+                    <>
+                      {ej.TIPO && (
+                        <>
+                          <strong>Tipo:</strong> {ej.TIPO}
+                          <br />
+                        </>
+                      )}
+                      <strong>Resorte:</strong> {ej.RESORTE}
+                      <br />
+                      {ej.ACCESORIO && (
+                        <>
+                          <strong>Accesorio:</strong> {ej.ACCESORIO}
+                          <br />
+                        </>
+                      )}
+                      <strong>EO:</strong> {ej.EO}
+                      <br />
+                      <strong>V:</strong> {ej.V}
+                    </>
+                  }
+                  isSelected={
+                    selectedSlot?.block === "PP2" && selectedSlot?.index === i
+                  }
+                  onLongPress={() => toggleSelection("PP2", i)}
+                />
               ),
             )}
 
@@ -170,23 +207,32 @@ function App() {
                 CIERRE FINAL
               </td>
             </tr>
-            <tr className="section-cierre">
-              <td className="label">Stretching y Observaciones</td>
-              <td>
-                {planning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES}
-              </td>
-            </tr>
+            <PlanRow
+              baseClass="section-cierre"
+              label="Stretching y Observaciones"
+              details={
+                planning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES
+              }
+              isSelected={
+                selectedSlot?.block === "CIERRE" && selectedSlot?.index === 0
+              }
+              onLongPress={() => toggleSelection("CIERRE", 0)}
+            />
           </tbody>
         </table>
       </div>
 
       <button
         id="actionButton"
-        className="action-btn"
-        onClick={handleGenerate}
+        className={`action-btn ${selectedSlot ? "variant-mode" : ""}`}
+        onClick={handleMainAction}
         disabled={isGenerating}
       >
-        {isGenerating ? "Generando..." : "Generar Nueva Planificación"}
+        {isGenerating
+          ? "Procesando..."
+          : selectedSlot
+            ? "Generar Variante"
+            : "Generar Nueva Planificación"}
       </button>
     </div>
   );

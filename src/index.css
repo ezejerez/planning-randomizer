@@ -1,3 +1,4 @@
+/* ... existing styles ... */
 * {
   margin: 0;
   padding: 0;
@@ -41,7 +42,27 @@ table {
 }
 
 tbody tr {
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s;
+}
+
+/* User Selection Styles */
+.selected-row {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 4px 0 0 0 #0066cc;
+  position: relative;
+  z-index: 10;
+}
+
+.clickable-row {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection during long press */
+  -webkit-user-select: none;
+}
+
+.clickable-row:active {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 td {
@@ -66,7 +87,7 @@ td.label {
   color: #ffffff;
 }
 
-/* Colores por sección */
+/* Colores por sección - keep original bases but allow selected overlay */
 .section-setup {
   background-color: #2d4a5c;
 }
@@ -109,6 +130,16 @@ td.label {
   background-color: #0052a3;
   box-shadow: 0 6px 16px rgba(0, 102, 204, 0.5);
   transform: translateY(-2px);
+}
+
+/* Variant Application Button Style */
+.action-btn.variant-mode {
+  background-color: #cc6600;
+  box-shadow: 0 4px 12px rgba(204, 102, 0, 0.4);
+}
+.action-btn.variant-mode:hover {
+  background-color: #a35200;
+  box-shadow: 0 6px 16px rgba(204, 102, 0, 0.5);
 }
 
 .action-btn:active {
