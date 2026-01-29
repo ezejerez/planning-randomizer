@@ -3,10 +3,9 @@ import "./App.css";
 import dbData from "./data/db.json";
 import { usePlanningRandomizer } from "./hooks/usePlanningRandomizer";
 import { savePlanning, loadPlanning } from "../utils";
-import type { Database, Planificacion, PlanEjercicio } from "./types";
 import { PlanRow } from "./components/PlanRow";
 
-const db = dbData as unknown as Database;
+const db = dbData;
 
 function App() {
   const {
@@ -22,11 +21,11 @@ function App() {
   useEffect(() => {
     const savedPlan = loadPlanning();
     if (savedPlan) {
-      setPlanning(savedPlan as Planificacion);
+      setPlanning(savedPlan);
     } else {
       generateNewPlanning(); // Initial generation
     }
-  }, []); // Run once on mount
+  }, []);
 
   // Auto-save whenever planning changes
   useEffect(() => {
@@ -41,9 +40,7 @@ function App() {
     } else {
       setIsGenerating(true);
       generateNewPlanning();
-      // setTimeout to simulate visual feedback if needed,
-      // but strictly not necessary as state update is instant
-      setTimeout(() => setIsGenerating(false), 300);
+      setIsGenerating(false);
     }
   };
 
@@ -90,7 +87,7 @@ function App() {
             </tr>
 
             {planning.Bloques_Clase.ENTRADA_EN_CALOR_Minutos_0_a_10.map(
-              (ej: PlanEjercicio, i: number) => (
+              (ej, i) => (
                 <PlanRow
                   key={`ec-${i}`}
                   baseClass="section-ec"
@@ -126,7 +123,7 @@ function App() {
             </tr>
 
             {planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Primera_Ronda.map(
-              (ej: PlanEjercicio, i: number) => (
+              (ej, i) => (
                 <PlanRow
                   key={`pp1-${i}`}
                   baseClass="section-pp1"
@@ -167,7 +164,7 @@ function App() {
               </td>
             </tr>
             {planning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Segunda_Ronda_Minuto_30.map(
-              (ej: PlanEjercicio, i: number) => (
+              (ej, i) => (
                 <PlanRow
                   key={`pp2-${i}`}
                   baseClass="section-pp2"

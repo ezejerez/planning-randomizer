@@ -38,7 +38,7 @@ export const usePlanningRandomizer = (db: Database) => {
         Setup_Inicial: {
           "CONEXION_INICIAL+MOVILIDAD_ARTICULAR": getRandomElement(
             db.BLOQUES_FIJOS.SETUP_INICIAL_OPCIONES,
-          ) as string,
+          ),
         },
         ENTRADA_EN_CALOR_Minutos_0_a_10: [],
         Parte_Principal_Minutos_10_a_40: {
@@ -48,7 +48,7 @@ export const usePlanningRandomizer = (db: Database) => {
         Cierre_Final: {
           STRETCHING_OBSERVACIONES: getRandomElement(
             db.BLOQUES_FIJOS.CIERRE_OPCIONES_SUGERIDAS,
-          ) as string,
+          ),
         },
       },
     };
@@ -58,11 +58,11 @@ export const usePlanningRandomizer = (db: Database) => {
     const ecCategories = ["ZM", "TI", "TS"];
 
     ecSlots.forEach((slot, idx) => {
-      const ejercicioData = getRandomElement(db.SLOTS_DINAMICOS[slot]);
-      if (!ejercicioData) return;
+      const ejercicio = getRandomElement(db.SLOTS_DINAMICOS[slot]);
 
-      const ejercicio = ejercicioData as any;
-      const opcion = getRandomElement(ejercicio.Opciones) as any;
+      if (!ejercicio) return;
+
+      const opcion = getRandomElement(ejercicio.Opciones);
 
       newPlanning.Bloques_Clase.ENTRADA_EN_CALOR_Minutos_0_a_10.push({
         Categoria: ecCategories[idx],
@@ -71,7 +71,7 @@ export const usePlanningRandomizer = (db: Database) => {
         ACCESORIO: opcion.ACCESORIO || "",
         EO: opcion.EO || "",
         V: opcion.V || "",
-      } as PlanEjercicio);
+      });
     });
 
     // Primera Ronda PP
@@ -79,11 +79,11 @@ export const usePlanningRandomizer = (db: Database) => {
     const ppCategories = ["TI", "ZM", "TS"];
 
     pp1Slots.forEach((slot, idx) => {
-      const ejercicioData = getRandomElement(db.SLOTS_DINAMICOS[slot]);
-      if (!ejercicioData) return;
+      const ejercicio = getRandomElement(db.SLOTS_DINAMICOS[slot]);
 
-      const ejercicio = ejercicioData as any;
-      const opcion = getRandomElement(ejercicio.Opciones) as any;
+      if (!ejercicio) return;
+
+      const opcion = getRandomElement(ejercicio.Opciones);
 
       newPlanning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Primera_Ronda.push(
         {
@@ -94,18 +94,18 @@ export const usePlanningRandomizer = (db: Database) => {
           ACCESORIO: opcion.ACCESORIO || "",
           EO: opcion.EO || "",
           V: opcion.V || "",
-        } as PlanEjercicio,
+        },
       );
     });
 
     const pp2Slots = SLOT_KEYS.PP2;
 
     pp2Slots.forEach((slot, idx) => {
-      const ejercicioData = getRandomElement(db.SLOTS_DINAMICOS[slot]);
-      if (!ejercicioData) return;
+      const ejercicio = getRandomElement(db.SLOTS_DINAMICOS[slot]);
 
-      const ejercicio = ejercicioData as any;
-      const opcion = getRandomElement(ejercicio.Opciones) as any;
+      if (!ejercicio) return;
+
+      const opcion = getRandomElement(ejercicio.Opciones);
 
       newPlanning.Bloques_Clase.Parte_Principal_Minutos_10_a_40.Segunda_Ronda_Minuto_30.push(
         {
@@ -116,7 +116,7 @@ export const usePlanningRandomizer = (db: Database) => {
           ACCESORIO: opcion.ACCESORIO || "",
           EO: opcion.EO || "",
           V: opcion.V || "",
-        } as PlanEjercicio,
+        },
       );
     });
 
@@ -146,7 +146,7 @@ export const usePlanningRandomizer = (db: Database) => {
       if (available.length > 0)
         newPlanning.Bloques_Clase.Setup_Inicial[
           "CONEXION_INICIAL+MOVILIDAD_ARTICULAR"
-        ] = getRandomElement(available) as string;
+        ] = getRandomElement(available);
     } else if (block === "CIERRE") {
       const current =
         planning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES;
@@ -154,7 +154,7 @@ export const usePlanningRandomizer = (db: Database) => {
       const available = pool.filter((item) => item !== current);
       if (available.length > 0)
         newPlanning.Bloques_Clase.Cierre_Final.STRETCHING_OBSERVACIONES =
-          getRandomElement(available) as string;
+          getRandomElement(available);
     } else {
       // Dynamic slots
       let currentList: PlanEjercicio[] = [];
@@ -199,8 +199,8 @@ export const usePlanningRandomizer = (db: Database) => {
           validOptions.length > 0 ? validOptions : fallbackOptions;
 
         if (dataset.length > 0) {
-          const newExerciseData = getRandomElement(dataset) as any;
-          const newOption = getRandomElement(newExerciseData.Opciones) as any;
+          const newExerciseData = getRandomElement(dataset);
+          const newOption = getRandomElement(newExerciseData.Opciones);
 
           const newItem: PlanEjercicio = {
             Categoria: category,
@@ -230,12 +230,7 @@ export const usePlanningRandomizer = (db: Database) => {
     }
 
     setPlanning(newPlanning);
-    // Keep selection active? User typically wants to see the change.
-    // Maybe deselect after change to indicate "done".
-    // User said "Al presionar... el boton cambia... genera nueva variante".
-    // Typically after generating, you might want to review it. I'll keep distinct logic:
-    // "Generate" button triggers logic, then selection remains? No, let's keep selection so they can regenerate again if they don't like it.
-    // If they want to select another, they click another.
+    // setSelectedSlot(null) // Reset selection
   }, [planning, selectedSlot, db]);
 
   return {

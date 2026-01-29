@@ -1,0 +1,137 @@
+h1 {
+  color: #ffffff;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  background-color: #242424;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+tbody tr {
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s;
+}
+
+/* User Selection Styles */
+.selected-row {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: inset 4px 0 0 0 #0066cc;
+  position: relative;
+  z-index: 10;
+}
+
+.clickable-row {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection during long press */
+  -webkit-user-select: none;
+}
+
+.clickable-row:active {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #333333;
+  vertical-align: top;
+}
+
+td.section-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 18px 16px;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+td.label {
+  font-weight: 600;
+  width: 35%;
+  color: #ffffff;
+}
+
+/* Colores por sección - keep original bases but allow selected overlay */
+.section-setup {
+  background-color: #2d4a5c;
+}
+
+.section-ec {
+  background-color: #3d5a4f;
+}
+
+.section-pp1 {
+  background-color: #5a3d5c;
+}
+
+.section-pp2 {
+  background-color: #5c4a2d;
+}
+
+.section-cierre {
+  background-color: #4a2d2d;
+}
+
+.action-btn {
+  position: sticky;
+  bottom: 20px;
+  display: block;
+  margin: 30px auto 20px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #0066cc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+  z-index: 100;
+}
+
+.action-btn:hover {
+  background-color: #0052a3;
+  box-shadow: 0 6px 16px rgba(0, 102, 204, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Variant Application Button Style */
+.action-btn.variant-mode {
+  background-color: #cc6600;
+  box-shadow: 0 4px 12px rgba(204, 102, 0, 0.4);
+}
+.action-btn.variant-mode:hover {
+  background-color: #a35200;
+  box-shadow: 0 6px 16px rgba(204, 102, 0, 0.5);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  th,
+  td {
+    padding: 12px 10px;
+    font-size: 0.9rem;
+  }
+}

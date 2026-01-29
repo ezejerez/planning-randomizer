@@ -1,10 +1,12 @@
+import type { Planificacion } from "../src/types";
+
 // Función para seleccionar elemento aleatorio
-export function getRandomElement(arr: unknown[]) {
+export function getRandomElement<T>(arr: T[]) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
 // Función para guardar planificación en localStorage
-export function savePlanning(planning: unknown) {
+export function savePlanning(planning: Planificacion) {
   try {
     localStorage.setItem("planificacionPilates", JSON.stringify(planning));
 
@@ -15,7 +17,7 @@ export function savePlanning(planning: unknown) {
 }
 
 // Función para cargar planificación desde localStorage
-export function loadPlanning() {
+export function loadPlanning(): Planificacion | null {
   try {
     const loadedPlanning = localStorage.getItem("planificacionPilates");
 
